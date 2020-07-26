@@ -86,9 +86,8 @@ app.post('/signup', function(request, response) {
                 response.send("Email already exists");
 			} else {
                 var hashToStoreInDb = getHashFromUserPassword(password);
-                sql = "INSERT INTO users (name, email, password, location, age) VALUES \
-                (?, ?, ?, ?, ?)";
-				con.query(sql, [name, email, hashToStoreInDb, location, age], function(insertError, insertResults) {
+                sql = "INSERT INTO users (name, email, password, location, age, signup_time) VALUES (?, ?, ?, ?, ?, ?)";
+				con.query(sql, [name, email, hashToStoreInDb, location, age, new Date()], function(insertError, insertResults) {
                     if (insertError) {
                         throw insertError;
                     }
@@ -123,6 +122,8 @@ app.post('/signin', function(request, response) {
 			if (ok) {
 				request.session.loggedin = true;
                 request.session.email = email;
+                request.session.user_id = results[0].id;
+                console.log(results[0]);
                 response.send("Signin Successful!")
 			} else {
 				response.send('Incorrect Email and/or Password!');
@@ -142,6 +143,26 @@ app.post('/signout', function(request, response) {
         response.send("Signout Successful!");
     }
     response.end();
+});
+
+app.post('/upload-meme', function(request, response) {
+    if (request.session.loggedin) {
+        if (request.body.data) {
+            sql = "INSERT INTO memes (data, upload_user_id, upload_time) VALUES (?, ?, ?)";
+            con.query(sql, [request.body.data, request.session.user_id, new Date()], function(error) {
+                if (error) {
+                    response.send("Error occurred. Please try again.");
+                    throw error;
+                } else {
+                    response.send("Meme-upload successful");
+                }
+            });
+        } else {
+            response.send("Please enter data");
+        }
+    } else {
+        response.send("You forgot to signin memer ;)");
+    }
 });
 
 app.listen(3001);
