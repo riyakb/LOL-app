@@ -4,7 +4,10 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const session = require('express-session');
 
+const sourceFile = require('./source-file.js');
+
 const saltRounds = 10;
+
 
 function getHashFromUserPassword(userPassword) {
     return bcrypt.hashSync(userPassword, saltRounds);
@@ -18,18 +21,14 @@ function compareUserPassword(userPassword, hash) {
 app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended : true}));
-app.use(session({
-	secret: 'secret',
-	resave: true,
-	saveUninitialized: true
-}));
+app.use(session(sourceFile.sessionInilizationObject));
 
 //Connection to DB
-const serverCon = mysql.createConnection({
-	host     : 'localhost',
-	user     : 'root',
-    password : 'root'
-});
+// const serverCon = mysql.createConnection({
+// 	host     : 'localhost',
+// 	user     : 'root',
+//     password : 'root'
+// });
 
 // con.connect(function(err) {
 //     // if (err) throw err;
@@ -39,17 +38,12 @@ const serverCon = mysql.createConnection({
 
 
 //Create Database and Tables
-serverCon.query("CREATE DATABASE lol_app;", function (err, result) {
-    // if (err) throw err;
-    console.log("Database lol_app created");
-});
+// serverCon.query("CREATE DATABASE lol_app;", function (err, result) {
+//     // if (err) throw err;
+//     console.log("Database lol_app created");
+// });
 
-const con = mysql.createConnection({
-	host     : 'localhost',
-	user     : 'root',
-    password : 'root',
-    database : 'lol_app'
-});
+const con = mysql.createConnection(sourceFile.conCreationObject);
 
 // con.connect(function(err) {
 //     // if (err) throw err;
@@ -110,7 +104,6 @@ app.post('/signup', function(request, response) {
 app.post('/signin', function(request, response) {
 	var email = request.body.email;
     var password = request.body.password;
-    console.log(request.body);
 	if (email && password) {
 		con.query('SELECT * FROM users WHERE email = ?', [email], function(error, results) {
             if (error) throw error;
@@ -123,7 +116,6 @@ app.post('/signin', function(request, response) {
 				request.session.loggedin = true;
                 request.session.email = email;
                 request.session.user_id = results[0].id;
-                console.log(results[0]);
                 response.send("Signin Successful!")
 			} else {
 				response.send('Incorrect Email and/or Password!');
@@ -138,7 +130,6 @@ app.post('/signin', function(request, response) {
 
 app.post('/signout', function(request, response) {
     if (request.session.loggedin) {
-        console.log(request.session);
         request.session.loggedin = false;
         response.send("Signout Successful!");
     }
