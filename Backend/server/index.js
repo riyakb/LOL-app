@@ -23,47 +23,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(session(sourceFile.sessionInilizationObject));
 
-//Connection to DB
-// const serverCon = mysql.createConnection({
-// 	host     : 'localhost',
-// 	user     : 'root',
-//     password : 'root'
-// });
-
-// con.connect(function(err) {
-//     // if (err) throw err;
-//     console.log("Connected to localhost");
-// });
-
-
-
-//Create Database and Tables
-// serverCon.query("CREATE DATABASE lol_app;", function (err, result) {
-//     // if (err) throw err;
-//     console.log("Database lol_app created");
-// });
 
 const con = mysql.createConnection(sourceFile.conCreationObject);
-
-// con.connect(function(err) {
-//     // if (err) throw err;
-//     console.log("Connected to database lol_app");
-// });
-
-// sql = "CREATE TABLE users (\
-//     id INT AUTO_INCREMENT PRIMARY KEY, \
-//     name VARCHAR(255), \
-//     email VARCHAR(255), \
-//     password VARCHAR(255), \
-//     location VARCHAR(255), \
-//     age INTEGER(3));";
-// con.query(sql, function (err, result) {
-//     if (err) throw err;
-//     console.log("Table users created");
-// });
-
-
-
 
 //handle Requests
 app.post('/signup', function(request, response) {
