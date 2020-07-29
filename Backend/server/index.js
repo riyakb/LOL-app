@@ -23,11 +23,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(session(sourceFile.sessionInilizationObject));
 
-
 const con = mysql.createConnection(sourceFile.conCreationObject);
+
 
 //handle Requests
 app.post('/signup', function(request, response) {
+    response.write(JSON.stringify(request.body));
     var name = request.body.name;
 	var email = request.body.email;
     var password = request.body.password;
@@ -35,10 +36,15 @@ app.post('/signup', function(request, response) {
     var age = request.body.age;
 
 	if (name && email && password && location && age) {
+        console.log("Here inside signup");
 		con.query("SELECT * FROM users WHERE email = ?", [email], function(error, results) {
-            if (error) throw error;
+            if (error) {
+                console.log(error.stack);
+            }
+
 			if (results.length > 0) {
-                response.send("Email already exists");
+                response.write("Email already exists");
+                response.end();
 			} else {
                 var hashToStoreInDb = getHashFromUserPassword(password);
                 sql = "INSERT INTO users (name, email, password, location, age, signup_time) VALUES (?, ?, ?, ?, ?, ?)";
@@ -46,7 +52,8 @@ app.post('/signup', function(request, response) {
                     if (insertError) {
                         throw insertError;
                     }
-                    response.send("Registration Successful");
+                    response.write("Registration Successful");
+                    response.end();
                 });
             }
 		});
@@ -57,12 +64,13 @@ app.post('/signup', function(request, response) {
         if (!password) { unFilled = "password"; }
         if (!email) { unFilled = "email"; }
         if (!name) { unFilled = "name"; }
-        response.send("Please enter " + unFilled);
+        response.write("Please enter " + unFilled);
 		response.end();
 	}
 });
 
 app.post('/signin', function(request, response) {
+    response.write(JSON.stringify(request.body));
 	var email = request.body.email;
     var password = request.body.password;
 	if (email && password) {
@@ -77,44 +85,57 @@ app.post('/signin', function(request, response) {
 				request.session.loggedin = true;
                 request.session.email = email;
                 request.session.user_id = results[0].id;
-                response.send("Signin Successful!")
+                response.write("Signin Successful!")
 			} else {
-				response.send('Incorrect Email and/or Password!');
+				response.write('Incorrect Email and/or Password!');
 			}			
 			response.end();
 		});
 	} else {
-		response.send('Please enter Email and Password!');
+		response.write('Please enter Email and Password!');
 		response.end();
 	}
 });
 
 app.post('/signout', function(request, response) {
+    response.write(JSON.stringify(request.body));
     if (request.session.loggedin) {
         request.session.loggedin = false;
-        response.send("Signout Successful!");
+        response.write("Signout Successful!");
     }
     response.end();
 });
 
 app.post('/upload-meme', function(request, response) {
+    response.write(JSON.stringify(request.body));
     if (request.session.loggedin) {
         if (request.body.data) {
             sql = "INSERT INTO memes (data, upload_user_id, upload_time) VALUES (?, ?, ?)";
             con.query(sql, [request.body.data, request.session.user_id, new Date()], function(error) {
                 if (error) {
-                    response.send("Error occurred. Please try again.");
+                    response.write("Error occurred. Please try again.");
                     throw error;
                 } else {
-                    response.send("Meme-upload successful");
+                    response.write("Meme-upload successful");
                 }
+                response.end();
             });
         } else {
-            response.send("Please enter data");
+            response.write("Please enter data");
+            response.end();
         }
     } else {
-        response.send("You forgot to signin memer ;)");
+        response.write("You forgot to signin memer ;)");
+        response.end();
     }
 });
 
-app.listen(3001);
+app.get('/', function(request, response) {
+    response.write(JSON.stringify(request.body));
+    response.write("Awesome\n");
+    response.end();
+});
+
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT);
