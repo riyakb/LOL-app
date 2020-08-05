@@ -173,5 +173,59 @@ app.post('/download-meme', function(request, response) {
     }
 })
 
+
+app.post('/delete-meme', function(request, response) {
+    if (request.session.loggedin) {
+        user_id = request.session.user_id;
+        meme_id = request.body.meme_id;
+        if (meme_id) {
+            sql = "SELECT id FROM memes WHERE upload_user_id = ? AND id = ?;";
+            con.query(sql, [user_id, meme_id], function(error, results) {
+                if (error) {
+                    throw error;
+                } else {
+                    if (results.length > 0) {
+                        sql = "DELETE FROM memes WHERE upload_user_id = ? AND id = ?;";
+                        con.query(sql, [user_id, meme_id], function(error, results) {
+                            response.write("Deleted Successfully");
+                            response.end();
+                        });
+                    } else {
+                        response.write("Can't delete, meme is not yours!");
+                        response.end();
+                    }
+                }
+            });
+        } else {
+            response.write("Please send meme_id");
+            response.end();
+        }
+    } else {
+        response.write("Please signin");
+        response.end();
+    }
+})
+
+app.post('/delete-user', function(request, response) {x`
+    if (request.session.loggedin) {
+        user_id = request.session.user_id;
+        sql = "DELETE FROM users WHERE id = ?";
+        con.query(sql, [user_id], function(error) {
+            if (error) {
+                throw error;
+            } else {
+                request.session.loggedin = false;
+                response.write("Congratulations! You have removed yourself!!");
+            }
+            response.end();
+        })
+    } else {
+        response.write("Please signin");
+        response.end();
+    }
+    
+})
+
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT);
