@@ -7,7 +7,7 @@ const session = require('express-session');
 const sourceFile = require('./source-file.js');
 
 const saltRounds = 10;
-const maxDownloadCount = 5;
+const maxDownloadCount = 10;
 
 function getHashFromUserPassword(userPassword) {
     return bcrypt.hashSync(userPassword, saltRounds);
@@ -52,6 +52,14 @@ app.post('/signup', function(request, response) {
                     if (insertError) {
                         throw insertError;
                     }
+                    user_id = insertResults.insertId;
+                    sql = "SELECT id FROM memes";
+                    con.query(sql, function(error, results) {
+                        sql = "INSERT INTO user_meme_interaction (user_id, meme_id) VALUES (?, ?)";
+                        for (i = 0; i < results.length; i++) {
+                            con.query(sql, [user_id, results[i].id]);
+                        }
+                    });
                     response.write("Registration Successful");
                     response.end();
                 });
@@ -111,14 +119,25 @@ app.post('/upload-meme', function(request, response) {
     if (request.session.loggedin) {
         if (request.body.data) {
             sql = "INSERT INTO memes (data, upload_user_id, upload_time) VALUES (?, ?, ?)";
-            con.query(sql, [request.body.data, request.session.user_id, new Date()], function(error) {
+            con.query(sql, [request.body.data, request.session.user_id, new Date()], function(error, results) {
                 if (error) {
                     response.write("Error occurred. Please try again.");
+                    response.end();
                     throw error;
                 } else {
+                    console.log(results.insertId);
+                    meme_id = results.insertId;
+                    sql = "SELECT id FROM users";   
+                    con.query(sql, function(error, results) {
+                        sql = "INSERT INTO user_meme_interaction (user_id, meme_id) VALUES (?, ?)";
+                        for (i = 0; i < results.length; i++) {
+                            console.log(results);
+                            con.query(sql, [results[i].id, meme_id]);
+                        }
+                    });
                     response.write("Meme-upload successful");
+                    response.end();
                 }
-                response.end();
             });
         } else {
             response.write("Please enter data");
@@ -152,7 +171,7 @@ app.post('/download-meme', function(request, response) {
         response.write("Please signin to download-meme");
         response.end();
     }
-    
 })
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT);

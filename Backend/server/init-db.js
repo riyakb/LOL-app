@@ -49,3 +49,9 @@ sql = "CREATE TABLE user_meme_interaction ( \
     score INT)";
 
 
+//Delete Rows
+sql = "DELETE FROM user_meme_interaction; DELETE FROM users; DELETE FROM memes;";
+
+//Obtain all Rows
+sql = "select * from users; select * from memes; select * from user_meme_interaction;"
+
