@@ -7,7 +7,7 @@ const session = require('express-session');
 const sourceFile = require('./source-file.js');
 
 const saltRounds = 10;
-
+const maxDownloadCount = 5;
 
 function getHashFromUserPassword(userPassword) {
     return bcrypt.hashSync(userPassword, saltRounds);
@@ -136,6 +136,23 @@ app.get('/', function(request, response) {
     response.end();
 });
 
-
+app.post('/download-meme', function(request, response) {
+    if (request.session.loggedin) {
+        sql = "SELECT * FROM user_meme_interaction WHERE user_id = ? ORDER BY score  DESC LIMIT ?;";
+        con.query(sql, [request.session.user_id, maxDownloadCount], function(error, results) {
+            if (error) {
+                response.write("Error occurred. Please try again.");
+                throw error;
+            } else {
+                response.json(results);
+            }
+            response.end();
+        });
+    } else {    
+        response.write("Please signin to download-meme");
+        response.end();
+    }
+    
+})
 const PORT = process.env.PORT || 8080;
 app.listen(PORT);

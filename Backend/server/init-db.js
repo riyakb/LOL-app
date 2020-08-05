@@ -41,3 +41,11 @@ con.query(sql, function (err) {
     console.log("Table memes created");
 });
 
+sql = "CREATE TABLE user_meme_interaction ( \
+    id INT AUTO_INCREMENT PRIMARY KEY, \
+    user_id INT, \
+    meme_id INT, \
+    reaction VARCHAR(255), \
+    score INT)";
+
+
