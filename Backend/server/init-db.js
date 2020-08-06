@@ -59,10 +59,10 @@ sql = "select * from users; select * from memes; select * from user_meme_interac
 sql = "SHOW COLUMNS FROM users; SHOW COLUMNS FROM memes; SHOW COLUMNS FROM user_meme_interaction;"
 
 //Add Foreign Key Constraints
-    sql = "ALTER TABLE memes \
-        ADD CONSTRAINT fk_upload_user_id \
-        FOREIGN KEY (upload_user_id) REFERENCES users(id) \
-        ON DELETE CASCADE"
+sql = "ALTER TABLE memes \
+    ADD CONSTRAINT fk_upload_user_id \
+    FOREIGN KEY (upload_user_id) REFERENCES users(id) \
+    ON DELETE CASCADE"
 
 sql = "ALTER TABLE user_meme_interaction \
     ADD CONSTRAINT fk_user_id \
@@ -84,3 +84,7 @@ sql = "SELECT top_memes_for_user.meme_id, top_memes_for_user.user_id, \
     FROM (SELECT * FROM user_meme_interaction WHERE user_id = ? ORDER BY score  DESC LIMIT ?) \
     AS top_memes_for_user \
     JOIN memes ON top_memes_for_user.meme_id = memes.id;"
+
+//Modify data type of reaction
+sql = "ALTER TABLE user_meme_interaction \
+    MODIFY COLUMN reaction INT NOT NULL DEFAULT '0';"
