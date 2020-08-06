@@ -32,7 +32,7 @@ con.query(sql, function (err) {
 
 sql = "CREATE TABLE memes ( \
     id INT AUTO_INCREMENT PRIMARY KEY, \
-    data VARCHAR(255), \
+    data VARCHAR, \
     upload_user_id INT, \
     upload_time DATETIME \
     )";
@@ -55,3 +55,32 @@ sql = "DELETE FROM user_meme_interaction; DELETE FROM users; DELETE FROM memes;"
 //Obtain all Rows
 sql = "select * from users; select * from memes; select * from user_meme_interaction;"
 
+//Show all columns
+sql = "SHOW COLUMNS FROM users; SHOW COLUMNS FROM memes; SHOW COLUMNS FROM user_meme_interaction;"
+
+//Add Foreign Key Constraints
+    sql = "ALTER TABLE memes \
+        ADD CONSTRAINT fk_upload_user_id \
+        FOREIGN KEY (upload_user_id) REFERENCES users(id) \
+        ON DELETE CASCADE"
+
+sql = "ALTER TABLE user_meme_interaction \
+    ADD CONSTRAINT fk_user_id \
+    FOREIGN KEY (user_id) REFERENCES users(id) \
+    ON DELETE CASCADE"
+
+sql = "ALTER TABLE user_meme_interaction \
+    ADD CONSTRAINT fk_meme_id \
+    FOREIGN KEY (meme_id) REFERENCES memes(id) \
+    ON DELETE CASCADE"
+
+//Modify data type of memes
+sql = "ALTER TABLE memes \
+    MODIFY COLUMN data MEDIUMBLOB;"
+
+//Download-meme
+sql = "WITH a AS\
+    (SELECT * FROM user_meme_interaction WHERE user_id = ? ORDER BY score  DESC LIMIT ?) \
+    SELECT a.meme_id, a.user_id, a.reaction, a.score, memes.data \
+    FROM a \
+    JOIN memes ON a.meme_id = memes.id;"

@@ -2,12 +2,15 @@ const bcrypt = require('bcrypt');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
+
 const session = require('express-session');
+
 
 const sourceFile = require('./source-file.js');
 
 const saltRounds = 10;
 const maxDownloadCount = 10;
+const maxDataSize = '50mb';
 
 function getHashFromUserPassword(userPassword) {
     return bcrypt.hashSync(userPassword, saltRounds);
@@ -19,12 +22,12 @@ function compareUserPassword(userPassword, hash) {
 
 //Express Service
 app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended : true}));
+app.use(bodyParser.json({limit : maxDataSize, extended : true}));
+app.use(bodyParser.urlencoded({limit : maxDataSize, extended : true}));
 app.use(session(sourceFile.sessionInilizationObject));
 
 const con = mysql.createConnection(sourceFile.conCreationObject);
-
+// const pool = promiseMysql.createPool(sourceFile.conCreationObject);
 
 //handle Requests
 app.post('/signup', function(request, response) {
@@ -36,10 +39,9 @@ app.post('/signup', function(request, response) {
     var age = request.body.age;
 
 	if (name && email && password && location && age) {
-        console.log("Here inside signup");
 		con.query("SELECT * FROM users WHERE email = ?", [email], function(error, results) {
             if (error) {
-                console.log(error.stack);
+                throw error;
             }
 
 			if (results.length > 0) {
@@ -115,7 +117,6 @@ app.post('/signout', function(request, response) {
 });
 
 app.post('/upload-meme', function(request, response) {
-    response.write(JSON.stringify(request.body));
     if (request.session.loggedin) {
         if (request.body.data) {
             sql = "INSERT INTO memes (data, upload_user_id, upload_time) VALUES (?, ?, ?)";
@@ -125,13 +126,11 @@ app.post('/upload-meme', function(request, response) {
                     response.end();
                     throw error;
                 } else {
-                    console.log(results.insertId);
                     meme_id = results.insertId;
                     sql = "SELECT id FROM users";   
                     con.query(sql, function(error, results) {
                         sql = "INSERT INTO user_meme_interaction (user_id, meme_id) VALUES (?, ?)";
                         for (i = 0; i < results.length; i++) {
-                            console.log(results);
                             con.query(sql, [results[i].id, meme_id]);
                         }
                     });
@@ -155,15 +154,38 @@ app.get('/', function(request, response) {
     response.end();
 });
 
+function convertBytesToText(bytes) {
+    res = ""
+    for (bytesPtr = 0; bytesPtr < bytes.length; bytesPtr++) {
+        res += String.fromCharCode(bytes[bytesPtr])
+    }
+    return res
+}
+
 app.post('/download-meme', function(request, response) {
     if (request.session.loggedin) {
-        sql = "SELECT * FROM user_meme_interaction WHERE user_id = ? ORDER BY score  DESC LIMIT ?;";
+        sql = "WITH a AS \
+            (SELECT * FROM user_meme_interaction WHERE user_id = ? ORDER BY score  DESC LIMIT ?) \
+            SELECT a.meme_id, a.user_id, a.reaction, a.score, memes.data \
+            FROM a \
+            JOIN memes ON a.meme_id = memes.id;"
         con.query(sql, [request.session.user_id, maxDownloadCount], function(error, results) {
             if (error) {
                 response.write("Error occurred. Please try again.");
                 throw error;
             } else {
-                response.json(results);
+                toSend = []
+                for (i = 0; i < results.length; i++) {
+                    data = convertBytesToText(results[i].data)
+                    toSend.push({
+                        "meme_id" : results[i].meme_id,
+                        "user_id" : results[i].user_id,
+                        "reaction" : results[i].reaction, 
+                        "score" : results[i].score, 
+                        "data" : data
+                    });
+                }
+                response.json(toSend);
             }
             response.end();
         });
@@ -206,7 +228,7 @@ app.post('/delete-meme', function(request, response) {
     }
 })
 
-app.post('/delete-user', function(request, response) {x`
+app.post('/delete-user', function(request, response) {
     if (request.session.loggedin) {
         user_id = request.session.user_id;
         sql = "DELETE FROM users WHERE id = ?";
