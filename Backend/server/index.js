@@ -7,6 +7,8 @@ const session = require('express-session');
 
 
 const sourceFile = require('./source-file.js');
+const { timingSafeEqual } = require('crypto');
+const { userInfo } = require('os');
 
 const saltRounds = 10;
 const maxDownloadCount = 10;
@@ -148,6 +150,7 @@ app.post('/upload-meme', function(request, response) {
     }
 });
 
+
 app.get('/', function(request, response) {
     response.write(JSON.stringify(request.body));
     response.write("Awesome\n");
@@ -195,6 +198,38 @@ app.post('/download-meme', function(request, response) {
     }
 })
 
+app.post('/react-meme', function(request, response) {
+    if (request.session.loggedin) {
+        user_id = request.session.user_id;
+        meme_id = request.body.meme_id;
+        reaction = request.body.reaction;
+        if (meme_id && reaction) {
+            sql = "UPDATE user_meme_interaction \
+                SET reaction = ? \
+                WHERE user_id = ? AND meme_id = ?"
+            con.query(sql, [reaction, user_id, meme_id], function(err, res) {
+                if (err) {
+                    throw err;
+                } else {
+                    console.log(res)
+                    if (res.affectedRows > 0) {
+                        response.write("Reaction Updated")
+                        response.end()
+                    } else {
+                        response.write("Incorrect meme_id")
+                        response.end()
+                    }
+                }
+            })
+        } else {
+            response.write("Please provide meme_id and reaction")
+            response.end()
+        }
+    } else {
+        response.write("Please signin");
+        response.end();
+    }
+})
 
 app.post('/delete-meme', function(request, response) {
     if (request.session.loggedin) {
