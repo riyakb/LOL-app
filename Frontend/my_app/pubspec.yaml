@@ -25,6 +25,7 @@ dependencies:
   flutter:
     sdk: flutter
   image_picker:
+  fluttertoast: ^3.1.0
 
 
   # The following adds the Cupertino Icons font to your application.

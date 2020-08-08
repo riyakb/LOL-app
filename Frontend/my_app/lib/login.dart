@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io';
 import 'signup.dart';
 import 'home_page.dart';
+import 'toast.dart';
 
 class MyLoginPage extends StatefulWidget {
   MyLoginPage({Key key, this.title}) : super(key: key);
@@ -51,6 +52,7 @@ class _MyLoginPageState extends State<MyLoginPage> {
       },
       body: loginToJson(login),
     );
+    showToast(response.body);
     print(response.headers['set-cookie']);
     print(emailController.text);
     print(passwordController.text);
@@ -60,10 +62,12 @@ class _MyLoginPageState extends State<MyLoginPage> {
     // Logout logout = logoutFromJson(response.body);
     // final sessionId = logout.sessionId;
     // final sessionId = "47a0479900504cb3ab";
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => MyHomePage(title: 'Home Page', cookie: response.headers['set-cookie'])),
-    );
+    if(response.statusCode == 200){
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MyHomePage(title: 'Home Page', cookie: response.headers['set-cookie'])),
+      );
+    }
   }
 
   @override

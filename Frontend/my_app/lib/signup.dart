@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:io';
 import 'login.dart';
+import 'toast.dart';
 
 class MySignupPage extends StatefulWidget {
   MySignupPage({Key key, this.title}) : super(key: key);
@@ -66,6 +67,7 @@ class _MySignupPageState extends State<MySignupPage> {
       },
       body: signupToJson(signup),
     );
+    showToast(response.body);
     print(nameController.text);
     print(emailController.text);
     print(passwordController.text);
@@ -73,10 +75,12 @@ class _MySignupPageState extends State<MySignupPage> {
     print(ageController.text);
     print(response.statusCode);
     print(response.body);
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => MyLoginPage(title: 'Login')),
-    );
+    if(response.statusCode == 200){
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MyLoginPage(title: 'Login')),
+      );
+    }
   }
 
   @override

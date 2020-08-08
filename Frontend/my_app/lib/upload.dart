@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'toast.dart';
 
 // To parse this JSON data, do
 //
@@ -38,7 +39,7 @@ class UploadWidget extends StatelessWidget {
 
   void _choose() async {
     // file = await ImagePicker.pickImage(source: ImageSource.camera);
-    file = await ImagePicker.pickImage(source: ImageSource.gallery);
+    file = await ImagePicker.pickImage(source: ImageSource.gallery, maxHeight: 500, maxWidth: 500);
   }
 
   Future<void> _upload() async {
@@ -53,6 +54,7 @@ class UploadWidget extends StatelessWidget {
       headers: headers,
       body: uploadToJson(upload),
     );
+    showToast(response.body);
     debugPrint(base64Image.length.toString(), wrapWidth: 1000);
     print(response.statusCode);
     print(response.body.split('').reversed.join(''));
