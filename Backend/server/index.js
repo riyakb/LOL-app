@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql');
 
 const session = require('express-session');
-
+const FORBIDDEN_STATUSCODE = 403
 
 const sourceFile = require('./source-file.js');
 const { timingSafeEqual } = require('crypto');
@@ -33,7 +33,6 @@ const con = mysql.createConnection(sourceFile.conCreationObject);
 
 //handle Requests
 app.post('/signup', function(request, response) {
-    response.write(JSON.stringify(request.body));
     var name = request.body.name;
 	var email = request.body.email;
     var password = request.body.password;
@@ -47,6 +46,7 @@ app.post('/signup', function(request, response) {
             }
 
 			if (results.length > 0) {
+                response.status(FORBIDDEN_STATUSCODE)
                 response.write("Email already exists");
                 response.end();
 			} else {
@@ -76,13 +76,13 @@ app.post('/signup', function(request, response) {
         if (!password) { unFilled = "password"; }
         if (!email) { unFilled = "email"; }
         if (!name) { unFilled = "name"; }
+        response.status(FORBIDDEN_STATUSCODE)
         response.write("Please enter " + unFilled);
 		response.end();
 	}
 });
 
 app.post('/signin', function(request, response) {
-    response.write(JSON.stringify(request.body));
 	var email = request.body.email;
     var password = request.body.password;
 	if (email && password) {
@@ -99,18 +99,19 @@ app.post('/signin', function(request, response) {
                 request.session.user_id = results[0].id;
                 response.write("Signin Successful!")
 			} else {
+                response.status(FORBIDDEN_STATUSCODE)
 				response.write('Incorrect Email and/or Password!');
 			}			
 			response.end();
 		});
 	} else {
+        response.status(FORBIDDEN_STATUSCODE)
 		response.write('Please enter Email and Password!');
 		response.end();
 	}
 });
 
 app.post('/signout', function(request, response) {
-    response.write(JSON.stringify(request.body));
     if (request.session.loggedin) {
         request.session.loggedin = false;
         response.write("Signout Successful!");
@@ -124,6 +125,7 @@ app.post('/upload-meme', function(request, response) {
             sql = "INSERT INTO memes (data, upload_user_id, upload_time) VALUES (?, ?, ?)";
             con.query(sql, [request.body.data, request.session.user_id, new Date()], function(error, results) {
                 if (error) {
+                    response.status(FORBIDDEN_STATUSCODE)
                     response.write("Error occurred. Please try again.");
                     response.end();
                     throw error;
@@ -141,10 +143,12 @@ app.post('/upload-meme', function(request, response) {
                 }
             });
         } else {
+            response.status(FORBIDDEN_STATUSCODE)
             response.write("Please enter data");
             response.end();
         }
     } else {
+        response.status(FORBIDDEN_STATUSCODE)
         response.write("You forgot to signin memer ;)");
         response.end();
     }
@@ -152,7 +156,6 @@ app.post('/upload-meme', function(request, response) {
 
 
 app.get('/', function(request, response) {
-    response.write(JSON.stringify(request.body));
     response.write("Awesome\n");
     response.end();
 });
@@ -174,6 +177,7 @@ app.post('/download-meme', function(request, response) {
             JOIN memes ON top_memes_for_user.meme_id = memes.id;"
         con.query(sql, [request.session.user_id, maxDownloadCount], function(error, results) {
             if (error) {
+                response.status(FORBIDDEN_STATUSCODE)
                 response.write("Error occurred. Please try again.");
                 throw error;
             } else {
@@ -193,6 +197,7 @@ app.post('/download-meme', function(request, response) {
             response.end();
         });
     } else {    
+        response.status(FORBIDDEN_STATUSCODE)
         response.write("Please signin to download-meme");
         response.end();
     }
@@ -216,16 +221,19 @@ app.post('/react-meme', function(request, response) {
                         response.write("Reaction Updated")
                         response.end()
                     } else {
+                        response.status(FORBIDDEN_STATUSCODE)
                         response.write("Incorrect meme_id")
                         response.end()
                     }
                 }
             })
         } else {
+            response.status(FORBIDDEN_STATUSCODE)
             response.write("Please provide meme_id and reaction")
             response.end()
         }
     } else {
+        response.status(FORBIDDEN_STATUSCODE)
         response.write("Please signin");
         response.end();
     }
@@ -248,16 +256,19 @@ app.post('/delete-meme', function(request, response) {
                             response.end();
                         });
                     } else {
+                        response.status(FORBIDDEN_STATUSCODE)
                         response.write("Can't delete, meme is not yours!");
                         response.end();
                     }
                 }
             });
         } else {
+            response.status(FORBIDDEN_STATUSCODE)
             response.write("Please send meme_id");
             response.end();
         }
     } else {
+        response.status(FORBIDDEN_STATUSCODE)
         response.write("Please signin");
         response.end();
     }
@@ -277,6 +288,7 @@ app.post('/delete-user', function(request, response) {
             response.end();
         })
     } else {
+        response.status(FORBIDDEN_STATUSCODE)
         response.write("Please signin");
         response.end();
     }
