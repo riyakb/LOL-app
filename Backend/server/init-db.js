@@ -81,7 +81,7 @@ sql = "ALTER TABLE memes \
 //Download-meme
 sql = "SELECT top_memes_for_user.meme_id, top_memes_for_user.user_id, \
     top_memes_for_user.reaction, top_memes_for_user.score, memes.data \
-    FROM (SELECT * FROM user_meme_interaction WHERE user_id = ? ORDER BY score  DESC LIMIT ?) \
+    FROM (SELECT * FROM user_meme_interaction WHERE user_id = ? AND reaction = '0' ORDER BY score  DESC LIMIT ?) \
     AS top_memes_for_user \
     JOIN memes ON top_memes_for_user.meme_id = memes.id;"
 

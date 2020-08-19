@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
+const {spawn} = require('child_process');
 
 const session = require('express-session');
 const FORBIDDEN_STATUSCODE = 403
@@ -21,6 +22,13 @@ function getHashFromUserPassword(userPassword) {
 function compareUserPassword(userPassword, hash) {
     return bcrypt.compareSync(userPassword, hash);
 }
+
+
+function runPythonScript(pythonFileName) {
+    const python = spawn('python', [pythonFileName]);
+}
+
+runPythonScript('main.py');
 
 //Express Service
 app = express();
@@ -172,7 +180,7 @@ app.post('/download-meme', function(request, response) {
     if (request.session.loggedin) {
         sql = "SELECT top_memes_for_user.meme_id, top_memes_for_user.user_id, \
             top_memes_for_user.reaction, top_memes_for_user.score, memes.data \
-            FROM (SELECT * FROM user_meme_interaction WHERE user_id = ? ORDER BY score  DESC LIMIT ?) \
+            FROM (SELECT * FROM user_meme_interaction WHERE user_id = ? AND reaction = '0' ORDER BY score  DESC LIMIT ?) \
             AS top_memes_for_user \
             JOIN memes ON top_memes_for_user.meme_id = memes.id;"
         con.query(sql, [request.session.user_id, maxDownloadCount], function(error, results) {
@@ -294,6 +302,8 @@ app.post('/delete-user', function(request, response) {
     }
     
 })
+
+
 
 
 const PORT = process.env.PORT || 8080;
