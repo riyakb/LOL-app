@@ -11,9 +11,9 @@ def read_and_write_db():
 	cursor = connection.cursor()
 
 
-	cursor.execute("CREATE VIEW `dislikes` AS SELECT meme_id, count(*) AS c FROM user_meme_interaction WHERE reaction=`dislike` GROUP BY meme_id;")
-	cursor.execute("CREATE VIEW `likes` AS SELECT meme_id, count(*) AS c FROM user_meme_interaction WHERE reaction=`like` GROUP BY meme_id;")
-	cursor.execute("CREATE VIEW `dislikes` AS SELECT meme_id, count(*) AS c FROM user_meme_interaction WHERE reaction=`dislike` GROUP BY meme_id;")
+	cursor.execute("CREATE VIEW `dislikes` AS SELECT meme_id, count(*) AS c FROM user_meme_interaction WHERE reaction=3 GROUP BY meme_id;")
+	cursor.execute("CREATE VIEW `likes` AS SELECT meme_id, count(*) AS c FROM user_meme_interaction WHERE reaction=2 GROUP BY meme_id;")
+	cursor.execute("CREATE VIEW `rofls` AS SELECT meme_id, count(*) AS c FROM user_meme_interaction WHERE reaction=1 GROUP BY meme_id;")
 
 	cursor.execute("SELECT user_id, meme_id FROM user_meme_interaction;")
 
@@ -28,11 +28,11 @@ def read_and_write_db():
 			user_topics.append(urow[0])
 
 		meme_id=row[1]
-		cursor.execute("SELECT topic FROM user_topics WHERE user_id=%s;",(meme_id))
+		cursor.execute("SELECT topic FROM meme_topics WHERE meme_id=%s;",(meme_id))
 		meme_topics_rows=cursor.fetchall()
 		meme_topics=[]
 		for mrow in meme_topics_rows:
-			meme_topics.append(meme[0])
+			meme_topics.append(mrow[0])
 
 		reactions=[]
 		cursor.execute("SELECT c FROM dislikes WHERE meme_id=%s;",(meme_id))
@@ -42,7 +42,8 @@ def read_and_write_db():
 		cursor.execute("SELECT c FROM rofls WHERE meme_id=%s;",(meme_id))
 		reactions.append(cursor.fetchone()[0])
 
-		timestamp=datetime.datetime().now()
+		cursor.execute("SELECT upload_time FROM memes WHERE id=%s",(meme_id))
+		timestamp=cursor.fetchone()[0]
 
 		score=str(modified_hot_ranking_computation(reactions, timestamp, user_topics, meme_topics))
 
