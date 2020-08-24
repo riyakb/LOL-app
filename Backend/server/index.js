@@ -119,6 +119,8 @@ app.post('/signin', function(request, response) {
 				request.session.loggedin = true;
                 request.session.email = email;
                 request.session.user_id = results[0].id;
+
+                response.write(JSON.stringify(results[0]))
                 response.write("Signin Successful!")
 			} else {
                 response.status(FORBIDDEN_STATUSCODE)
