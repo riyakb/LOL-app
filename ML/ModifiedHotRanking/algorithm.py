@@ -23,5 +23,7 @@ def modified_hot_ranking_computation(reactions, timestamp, user_topics, meme_top
 	n=len(meme_topics)
 	ni=len(set(meme_topics)&set(user_topics))
 	nj=n-ni
+	if n==0:
+		return hot_ranking_score
 	return hot_ranking_score*(ni+0.1*nj)/n
 
