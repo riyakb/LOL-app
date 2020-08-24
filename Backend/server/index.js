@@ -225,6 +225,7 @@ app.post('/download-meme', function(request, response) {
     }
 })
 
+
 app.post('/react-meme', function(request, response) {
     if (request.session.loggedin) {
         user_id = request.session.user_id;
@@ -238,7 +239,6 @@ app.post('/react-meme', function(request, response) {
                 if (err) {
                     throw err;
                 } else {
-                    console.log(res)
                     if (res.affectedRows > 0) {
                         response.write("Reaction Updated")
                         response.end()
@@ -318,7 +318,51 @@ app.post('/delete-user', function(request, response) {
 })
 
 
+app.post('/download-my-meme', function(request, response) {
+    if (request.session.loggedin) {
+        startidx = request.body.startidx;
+        if (!startidx || startidx < 0) {
+            response.status(FORBIDDEN_STATUSCODE)
+            response.write("Please provide a non-zero startidx")
+            response.end()
+            return
+        }
+        
+        sql = "SELECT * FROM MEMES WHERE upload_user_id = ? ORDER BY upload_time DESC"
+        con.query(sql, [request.session.user_id, maxDownloadCount], function(error, results) {
+            if (error) {
+                response.status(FORBIDDEN_STATUSCODE)
+                response.write("Error occurred. Please try again.");
+                throw error;
+            } else {
+                if (startidx >= results.length) {
+                    response.status(FORBIDDEN_STATUSCODE)
+                    response.write("startidx should be less than total memes (0-based index)")
+                    response.end()
+                    return
+                }
 
+                toSend = []
+                for (i = startidx; i < results.length; i++) {
+                    data = convertBytesToText(results[i].data)
+                    toSend.push({
+                        "meme_id" : results[i].id,
+                        "user_id" : results[i].upload_user_id,
+                        "data" : data,
+                        "upload_time" : results[i].upload_time
+                    });
+                    if (toSend.length >= maxDownloadCount) { break }
+                }
+                response.json(toSend);
+            }
+            response.end();
+        });
+    } else {    
+        response.status(FORBIDDEN_STATUSCODE)
+        response.write("Please signin to download-your-meme");
+        response.end();
+    }
+})
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT);
