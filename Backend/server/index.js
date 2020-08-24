@@ -10,6 +10,8 @@ const FORBIDDEN_STATUSCODE = 403
 const sourceFile = require('./source-file.js');
 const { timingSafeEqual } = require('crypto');
 const { userInfo } = require('os');
+const { SSL_OP_TLS_BLOCK_PADDING_BUG } = require('constants');
+const { json } = require('body-parser');
 
 const saltRounds = 10;
 const maxDownloadCount = 10;
@@ -39,18 +41,28 @@ app.post('/signup', function(request, response) {
     var password = request.body.password;
     var location = request.body.location;
     var age = request.body.age;
+    var topicsJsonString = request.body.topics;
 
-	if (name && email && password && location && age) {
+	if (name && email && password && location && age && topicsJsonString) {
+        topics = JSON.parse(topicsJsonString)
+        if (topics.length == 0) {
+            response.status(FORBIDDEN_STATUSCODE)
+            response.write("At least one topic should be choosen")
+            response.end()
+            return
+        }
+        
+        
 		con.query("SELECT * FROM users WHERE email = ?", [email], function(error, results) {
             if (error) {
                 throw error;
             }
-
 			if (results.length > 0) {
                 response.status(FORBIDDEN_STATUSCODE)
                 response.write("Email already exists");
                 response.end();
 			} else {
+
                 var hashToStoreInDb = getHashFromUserPassword(password);
                 sql = "INSERT INTO users (name, email, password, location, age, signup_time) VALUES (?, ?, ?, ?, ?, ?)";
 				con.query(sql, [name, email, hashToStoreInDb, location, age, new Date()], function(insertError, insertResults) {
@@ -65,6 +77,14 @@ app.post('/signup', function(request, response) {
                             con.query(sql, [user_id, results[i].id]);
                         }
                     });
+                    
+                    topicsQuery = "INSERT INTO user_topics (user_id, topic) VALUES (?, ?)"
+                    con.query(topicsQuery, function(error, results) {
+                        for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
+                            con.query(topicsQuery, [user_id, topics[topicPtr]])
+                        }
+                    })
+                    response.write(JSON.stringify(request.body))
                     response.write("Registration Successful");
                     response.end();
                 });
@@ -77,6 +97,7 @@ app.post('/signup', function(request, response) {
         if (!password) { unFilled = "password"; }
         if (!email) { unFilled = "email"; }
         if (!name) { unFilled = "name"; }
+        if (!topicsJsonString) { unFilled = "topics"; }
         response.status(FORBIDDEN_STATUSCODE)
         response.write("Please enter " + unFilled);
 		response.end();
