@@ -23,13 +23,6 @@ function compareUserPassword(userPassword, hash) {
     return bcrypt.compareSync(userPassword, hash);
 }
 
-
-function runPythonScript(pythonFileName) {
-    const python = spawn('python', [pythonFileName]);
-}
-
-runPythonScript('main.py');
-
 //Express Service
 app = express();
 app.use(bodyParser.json({limit : maxDataSize, extended : true}));
