@@ -48,7 +48,22 @@ sql = "CREATE TABLE user_meme_interaction ( \
     reaction VARCHAR(255), \
     score INT)";
 
+sql = "CREATE TABLE user_meme_interaction ( \
+    id INT AUTO_INCREMENT PRIMARY KEY, \
+    user_id INT, \
+    meme_id INT, \
+    reaction VARCHAR(255), \
+    score INT)";
 
+sql = "CREATE TABLE user_topics ( \
+    id INT AUTO_INCREMENT PRIMARY KEY, \
+    user_id INT, \
+    topic VARCHAR(255))";
+
+sql = "CREATE TABLE meme_topics ( \
+    id INT AUTO_INCREMENT PRIMARY KEY, \
+    meme_id INT, \
+    topic VARCHAR(255))";
 //Delete Rows
 sql = "DELETE FROM user_meme_interaction; DELETE FROM users; DELETE FROM memes;";
 
@@ -74,6 +89,16 @@ sql = "ALTER TABLE user_meme_interaction \
     FOREIGN KEY (meme_id) REFERENCES memes(id) \
     ON DELETE CASCADE"
 
+sql = "ALTER TABLE user_topics \
+    ADD CONSTRAINT fk_topic_user_id \
+    FOREIGN KEY (user_id) REFERENCES users(id) \
+    ON DELETE CASCADE"
+
+sql = "ALTER TABLE meme_topics \
+    ADD CONSTRAINT fk_topic_meme_id \
+    FOREIGN KEY (meme_id) REFERENCES memes(id) \
+    ON DELETE CASCADE"
+    
 //Modify data type of memes
 sql = "ALTER TABLE memes \
     MODIFY COLUMN data MEDIUMBLOB;"
@@ -88,3 +113,4 @@ sql = "SELECT top_memes_for_user.meme_id, top_memes_for_user.user_id, \
 //Modify data type of reaction
 sql = "ALTER TABLE user_meme_interaction \
     MODIFY COLUMN reaction INT NOT NULL DEFAULT '0';"
+
