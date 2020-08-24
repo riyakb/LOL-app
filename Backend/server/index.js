@@ -323,13 +323,17 @@ app.post('/delete-user', function(request, response) {
 app.post('/download-my-meme', function(request, response) {
     if (request.session.loggedin) {
         startidx = request.body.startidx;
-        if (!startidx || startidx < 0) {
+        var ok = true
+        if (startidx === 0) { ok = true}
+        else if (!startidx || startidx < 0) { ok = false}
+        
+        if (!ok) {
             response.status(FORBIDDEN_STATUSCODE)
-            response.write("Please provide a non-zero startidx")
+            response.write("Please provide a non-negative startidx")
             response.end()
             return
         }
-        
+
         sql = "SELECT * FROM memes WHERE upload_user_id = ? ORDER BY upload_time DESC"
         con.query(sql, [request.session.user_id, maxDownloadCount], function(error, results) {
             if (error) {
