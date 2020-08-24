@@ -14,7 +14,7 @@ const { SSL_OP_TLS_BLOCK_PADDING_BUG } = require('constants');
 const { json } = require('body-parser');
 
 const saltRounds = 10;
-const maxDownloadCount = 10;
+const maxDownloadCount = 5;
 const maxDataSize = '50mb';
 
 function getHashFromUserPassword(userPassword) {
