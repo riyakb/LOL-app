@@ -328,7 +328,7 @@ app.post('/download-my-meme', function(request, response) {
             return
         }
         
-        sql = "SELECT * FROM MEMES WHERE upload_user_id = ? ORDER BY upload_time DESC"
+        sql = "SELECT * FROM memes WHERE upload_user_id = ? ORDER BY upload_time DESC"
         con.query(sql, [request.session.user_id, maxDownloadCount], function(error, results) {
             if (error) {
                 response.status(FORBIDDEN_STATUSCODE)
