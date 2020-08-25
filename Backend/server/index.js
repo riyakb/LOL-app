@@ -324,8 +324,8 @@ app.post('/download-my-meme', function(request, response) {
     if (request.session.loggedin) {
         startidx = request.body.startidx;
         var ok = true
-        if (startidx === 0) { ok = true}
-        else if (!startidx || startidx < 0) { ok = false}
+        if (startidx === 0) { ok = true }
+        else if (!startidx || startidx < 0) { ok = false }
         
         if (!ok) {
             response.status(FORBIDDEN_STATUSCODE)
