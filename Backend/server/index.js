@@ -180,7 +180,10 @@ app.post('/upload-meme', function(request, response) {
 
 
 app.get('/', function(request, response) {
-    response.write("Awesome\n");
+    toWrite = "<!DOCTYPE html> <html><head> </head><body>" + "Click " +
+    "<a href=https://github.com/riyakb/LOL-app/blob/master/Frontend/my_app/build/app/outputs/apk/app.apk>here</a>" +
+    "</body> to download the LOL app</html>";
+    response.write(toWrite);
     response.end();
 });
 
