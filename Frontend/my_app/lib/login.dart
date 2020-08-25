@@ -38,6 +38,50 @@ class Login {
     };
 }
 
+Info infoFromJson(String str) => Info.fromJson(json.decode(str));
+
+String infoToJson(Info data) => json.encode(data.toJson());
+
+class Info {
+    Info({
+        this.id,
+        this.name,
+        this.email,
+        this.password,
+        this.location,
+        this.age,
+        this.signupTime,
+    });
+
+    int id;
+    String name;
+    String email;
+    String password;
+    String location;
+    int age;
+    DateTime signupTime;
+
+    factory Info.fromJson(Map<String, dynamic> json) => Info(
+        id: json["id"],
+        name: json["name"],
+        email: json["email"],
+        password: json["password"],
+        location: json["location"],
+        age: json["age"],
+        signupTime: DateTime.parse(json["signup_time"]),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "email": email,
+        "password": password,
+        "location": location,
+        "age": age,
+        "signup_time": signupTime.toIso8601String(),
+    };
+}
+
 
 class _MyLoginPageState extends State<MyLoginPage> {
   TextEditingController emailController = new TextEditingController();
@@ -52,7 +96,7 @@ class _MyLoginPageState extends State<MyLoginPage> {
       },
       body: loginToJson(login),
     );
-    showToast(response.body);
+    // showToast(response.body);
     print(response.headers['set-cookie']);
     print(emailController.text);
     print(passwordController.text);
@@ -63,10 +107,18 @@ class _MyLoginPageState extends State<MyLoginPage> {
     // final sessionId = logout.sessionId;
     // final sessionId = "47a0479900504cb3ab";
     if(response.statusCode == 200){
+      var resp = response.body.split('}');
+      String fresp = resp[0]+'}';
+      print(fresp);
+      Info ret = infoFromJson(fresp);
+      showToast(resp[1]);
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => MyHomePage(title: 'Home Page', cookie: response.headers['set-cookie'])),
+        MaterialPageRoute(builder: (context) => MyHomePage(title: 'Home Page', cookie: response.headers['set-cookie'], info: ret)),
       );
+    }
+    else{
+      showToast(response.body);
     }
   }
 
@@ -136,7 +188,6 @@ class _MyLoginPageState extends State<MyLoginPage> {
       ),
       body: SingleChildScrollView( child: Center(
         child: Container(
-          color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(36.0),
             child: Column(
@@ -145,7 +196,10 @@ class _MyLoginPageState extends State<MyLoginPage> {
               children: <Widget>[
                 SizedBox(
                   height: 155.0,
-                  child: Icon(Icons.device_hub),
+                  child: Image.asset(
+                    'images/logo.png',
+                    height: 25,
+                  ),
                 ),
                 SizedBox(height: 45.0),
                 emailField,

@@ -6,9 +6,10 @@ import 'dart:io';
 import 'login.dart';
 import 'upload.dart';
 import 'view.dart';
+import 'profile.dart';
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title, this.cookie}) : super(key: key);
+  MyHomePage({Key key, this.title, this.cookie, this.info}) : super(key: key);
 
   // This widget is the Login page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -21,6 +22,7 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
   final String cookie;
+  final Info info;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -85,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final List<Widget> _children = [
       MemesList(widget.cookie),
       UploadWidget(widget.cookie),
-      Text('Profile'),
+      Profile(widget.cookie, widget.info),
     ];
     return Scaffold(
       appBar: AppBar(

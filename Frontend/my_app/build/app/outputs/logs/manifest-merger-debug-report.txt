@@ -49,7 +49,7 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.0] /Users/shub
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.1.0] /Users/shubhamatri/.gradle/caches/transforms-2/files-2.1/a528b13ac93e64cafa3d0480e2c93207/core-1.1.0/AndroidManifest.xml:24:18-86
 	android:label
-		ADDED from /Users/shubhamatri/Desktop/SPSapp/my_app/android/app/src/main/AndroidManifest.xml:10:9-31
+		ADDED from /Users/shubhamatri/Desktop/SPSapp/my_app/android/app/src/main/AndroidManifest.xml:10:9-32
 	android:icon
 		ADDED from /Users/shubhamatri/Desktop/SPSapp/my_app/android/app/src/main/AndroidManifest.xml:11:9-43
 	android:name

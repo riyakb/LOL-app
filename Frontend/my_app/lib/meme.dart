@@ -6,12 +6,13 @@ import 'toast.dart';
 
 class Meme extends StatefulWidget {
 
-  Meme({Key key, this.image, this.id, this.cookie}) : super(key: key);
+  Meme({Key key, this.image, this.id, this.cookie, this.nextMeme}) : super(key: key);
 
   List<int> image;
   int id;
   int selectedemoji = 0;
   String cookie;
+  final nextMeme;
 
   @override
   _Meme createState() => _Meme(cookie);
@@ -70,30 +71,31 @@ class _Meme extends State<Meme>{
         print(response.statusCode);
         print(response.body);
         print(response.request);
+        setState(() {});
+        widget.nextMeme();
       }
 
       return Column(
         children: <Widget>[
-          Text("caption " + widget.id.toString(),
-            style: TextStyle(fontSize: 18),
-          ),
+          // Text("caption " + widget.id.toString(),
+          //   style: TextStyle(fontSize: 18),
+          // ),
           Image.memory(widget.image), 
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
-                color: (widget.selectedemoji == 1) ? Colors.lightBlue : null,
+                color: (widget.selectedemoji == 3) ? Colors.lightBlue : null,
                 child: IconButton(
                   icon: Image.asset(
-                    'images/haha.png',
+                    'images/dislike.png',
                     height: 25,
                   ),
-                  tooltip: 'ROFL',
+                  tooltip: 'PJ',
                   onPressed: () { 
-                    widget.selectedemoji = 1;
+                    widget.selectedemoji = 3;
                     _feedback(widget.id, widget.selectedemoji);
-                    setState(() {});
                   },
                   // highlightColor: Colors.blue,
                 ),
@@ -109,23 +111,21 @@ class _Meme extends State<Meme>{
                   onPressed: () { 
                     widget.selectedemoji = 2;
                     _feedback(widget.id,widget.selectedemoji);
-                    setState(() {});
                   },
                   // highlightColor: Colors.blue,
                 ),
               ),
               Container(
-                color: (widget.selectedemoji == 3) ? Colors.lightBlue : null,
+                color: (widget.selectedemoji == 1) ? Colors.lightBlue : null,
                 child: IconButton(
                   icon: Image.asset(
-                    'images/dislike.png',
+                    'images/haha.png',
                     height: 25,
                   ),
-                  tooltip: 'PJ',
+                  tooltip: 'ROFL',
                   onPressed: () { 
-                    widget.selectedemoji = 3;
+                    widget.selectedemoji = 1;
                     _feedback(widget.id,widget.selectedemoji);
-                    setState(() {});
                   },
                   // highlightColor: Colors.blue,
                 ),

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:io';
 import 'login.dart';
 import 'toast.dart';
+import 'package:flutter_multiselect/flutter_multiselect.dart';
 
 class MySignupPage extends StatefulWidget {
   MySignupPage({Key key, this.title}) : super(key: key);
@@ -17,6 +18,17 @@ class MySignupPage extends StatefulWidget {
 
 String signupToJson(Signup data) => json.encode(data.toJson());
 
+Signup signupFromJson(String data) => Signup.fromJson(json.decode(data));
+
+List<String> decode(String topics_string){
+        var temp = topics_string.split('"');
+        List<String> ret;
+        for(int i=1; i<temp.length; i+=2){
+          ret.add(temp[i]);
+        }
+        return ret;
+    }
+
 class Signup {
     Signup({
         this.name,
@@ -24,6 +36,7 @@ class Signup {
         this.password,
         this.location,
         this.age,
+        this.topics,
     });
 
     String name;
@@ -31,6 +44,17 @@ class Signup {
     String password;
     String location;
     String age;
+    List<String> topics;
+
+    String encode(List<String> topics){
+        String topics_string = "[";
+        for(int i=0; i < topics.length; i++){
+          if(i>0) topics_string += ','; 
+          topics_string += '\"' + topics[i].toString() + '\"';
+        }
+        topics_string += "]";
+        return topics_string;
+    }
 
     factory Signup.fromJson(Map<String, dynamic> json) => Signup(
         name: json["name"],
@@ -38,6 +62,7 @@ class Signup {
         password: json["password"],
         location: json["location"],
         age: json["age"],
+        topics: decode(json["topics"]),
     );
 
     Map<String, dynamic> toJson() => {
@@ -46,8 +71,11 @@ class Signup {
         "password": password,
         "location": location,
         "age": age,
+        "topics": this.encode(topics),
     };
 }
+
+
 
 
 class _MySignupPageState extends State<MySignupPage> {
@@ -57,17 +85,17 @@ class _MySignupPageState extends State<MySignupPage> {
   TextEditingController passwordController = new TextEditingController();
   TextEditingController locationController = new TextEditingController();
   TextEditingController ageController = new TextEditingController();
+  List<String> topics = [];
 
   Future<void> _signup() async {
     final url = "https://summer20-sps-85.el.r.appspot.com/signup";
-    Signup signup = Signup(name: nameController.text, email: emailController.text, password: passwordController.text, location: locationController.text, age: ageController.text);
+    Signup signup = Signup(name: nameController.text, email: emailController.text, password: passwordController.text, location: locationController.text, age: ageController.text, topics: topics);
     final response = await http.post('$url',
       headers: {
         HttpHeaders.contentTypeHeader: 'application/json'
       },
       body: signupToJson(signup),
     );
-    showToast(response.body);
     print(nameController.text);
     print(emailController.text);
     print(passwordController.text);
@@ -76,10 +104,15 @@ class _MySignupPageState extends State<MySignupPage> {
     print(response.statusCode);
     print(response.body);
     if(response.statusCode == 200){
+      var resp = response.body.split('}');
+      showToast(resp[1]);
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => MyLoginPage(title: 'Login')),
       );
+    }
+    else{
+      showToast(response.body);
     }
   }
 
@@ -140,6 +173,70 @@ class _MySignupPageState extends State<MySignupPage> {
       controller: ageController,
     );
 
+    final topicsField = MultiSelect(
+      autovalidate: false,
+      titleText: "Preferred Memes topics : ",
+      validator: (value) {
+              if (value == null) {
+                return 'Please select one or more option(s)';
+              }
+            },
+      errorText: 'Please select one or more option(s)',
+      dataSource: [
+        {
+          "display": "Politics",
+          "value": 1,
+        },
+        {
+          "display": "Cartoons",
+          "value": 2,
+        },
+        {
+          "display": "Animals",
+          "value": 3,
+        },
+        {
+          "display": "Movies/Music",
+          "value": 4,
+        },
+        {
+          "display": "Fitness",
+          "value": 5,
+        },
+        {
+          "display": "Sports",
+          "value": 6,
+        },
+        {
+          "display": "College/School",
+          "value": 7,
+        },
+        {
+          "display": "Career",
+          "value": 8,
+        },
+        {
+          "display": "Others",
+          "value": 9,
+        },
+      ],
+      textField: 'display',
+      valueField: 'display',
+      filterable: true,
+      required: true,
+      value: [],
+      onSaved: (value) {
+        print(value);
+        topics = value.cast<String>();
+        print('The value is $value');
+      },
+      change: (value){
+              print(value);
+              topics = value.cast<String>();
+              print(topics);
+            },
+    );
+
     final signupButon = Material(
       child: MaterialButton(
         elevation: 5.0,
@@ -153,6 +250,13 @@ class _MySignupPageState extends State<MySignupPage> {
         ),
       ),
     );
+
+    // List<int> value = [2];
+    // List<SmartSelectOption<int>> frameworks = [
+    //   SmartSelectOption<int>(value: 1, title: 'Ionic'),
+    //   SmartSelectOption<int>(value: 2, title: 'Flutter'),
+    //   SmartSelectOption<int>(value: 3, title: 'React Native'),
+    // ];
 
     return Scaffold(
       appBar: AppBar(
@@ -180,7 +284,6 @@ class _MySignupPageState extends State<MySignupPage> {
       ),
       body: SingleChildScrollView( child: Center(
         child: Container(
-          color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(36.0),
             child: Column(
@@ -189,7 +292,10 @@ class _MySignupPageState extends State<MySignupPage> {
               children: <Widget>[
                 SizedBox(
                   height: 100.0,
-                  child: Icon(Icons.device_hub),
+                  child: Image.asset(
+                    'images/logo.png',
+                    height: 25,
+                  ),
                 ),
                 nameField,
                 SizedBox(height: 10.0),
@@ -200,6 +306,14 @@ class _MySignupPageState extends State<MySignupPage> {
                 locationField,
                 SizedBox(height: 10.0),
                 ageField,
+                SizedBox(height: 10.0),
+                topicsField,
+                // SmartSelect<int>.multiple(
+                //   title: 'Frameworks',
+                //   value: value,
+                //   options: options,
+                //   onChange: (val) => setState(() => value = val),
+                // );
                 SizedBox(height: 30.0),
                 signupButon,
               ],
