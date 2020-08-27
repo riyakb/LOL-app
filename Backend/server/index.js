@@ -79,11 +79,11 @@ app.post('/signup', function(request, response) {
                     });
                     
                     topicsQuery = "INSERT INTO user_topics (user_id, topic) VALUES (?, ?)"
-                    con.query(topicsQuery, function(error, results) {
-                        for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
-                            con.query(topicsQuery, [user_id, topics[topicPtr]])
-                        }
-                    })
+                    
+                    for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
+                        con.query(topicsQuery, [user_id, topics[topicPtr]])
+                    }
+                    
                     response.write(JSON.stringify(request.body))
                     response.write("Registration Successful");
                     response.end();
@@ -145,7 +145,16 @@ app.post('/signout', function(request, response) {
 
 app.post('/upload-meme', function(request, response) {
     if (request.session.loggedin) {
-        if (request.body.data) {
+        var topicsJsonString = request.body.topics;
+        if (request.body.data && topicsJsonString) {
+            topics = JSON.parse(topicsJsonString)
+            if (topics.length == 0) {
+                response.status(FORBIDDEN_STATUSCODE)
+                response.write("At least one topic should be choosen")
+                response.end()
+                return
+            }
+
             sql = "INSERT INTO memes (data, upload_user_id, upload_time) VALUES (?, ?, ?)";
             con.query(sql, [request.body.data, request.session.user_id, new Date()], function(error, results) {
                 if (error) {
@@ -162,13 +171,19 @@ app.post('/upload-meme', function(request, response) {
                             con.query(sql, [results[i].id, meme_id]);
                         }
                     });
+
+                    topicsQuery = "INSERT INTO meme_topics (meme_id, topic) VALUES (?, ?)"
+                    for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
+                        con.query(topicsQuery, [meme_id, topics[topicPtr]])
+                    }
+
                     response.write("Meme-upload successful");
                     response.end();
                 }
             });
         } else {
             response.status(FORBIDDEN_STATUSCODE)
-            response.write("Please enter data");
+            response.write("Please enter data and topics");
             response.end();
         }
     } else {
