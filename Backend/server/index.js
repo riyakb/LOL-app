@@ -12,6 +12,7 @@ const { timingSafeEqual } = require('crypto');
 const { userInfo } = require('os');
 const { SSL_OP_TLS_BLOCK_PADDING_BUG } = require('constants');
 const { json } = require('body-parser');
+const { response } = require('express');
 
 const saltRounds = 10;
 const maxDownloadCount = 5;
@@ -92,16 +93,73 @@ app.post('/signup', function(request, response) {
 		});
 	} else {
         var unFilled = "";
+        if (!topicsJsonString) { unFilled = "topics"; }
         if (!age) { unFilled = "age"; }
         if (!location) { unFilled = "location"; }
         if (!password) { unFilled = "password"; }
         if (!email) { unFilled = "email"; }
         if (!name) { unFilled = "name"; }
-        if (!topicsJsonString) { unFilled = "topics"; }
         response.status(FORBIDDEN_STATUSCODE)
         response.write("Please enter " + unFilled);
 		response.end();
 	}
+});
+
+app.post('/update-profile', function(request, response) {
+    if (request.session.loggedin) {
+        var name = request.body.name;
+        var email = request.body.email;
+        var password = request.body.password;
+        var location = request.body.location;
+        var age = request.body.age;
+        var topicsJsonString = request.body.topics;
+
+        if (name && email && password && location && age && topicsJsonString) {
+            topics = JSON.parse(topicsJsonString)
+            if (topics.length == 0) {
+                response.status(FORBIDDEN_STATUSCODE)
+                response.write("At least one topic should be choosen")
+                response.end()
+                return
+            }
+            var hashToStoreInDb = getHashFromUserPassword(password);
+            sql = "UPDATE users SET name = ?, email = ?, password = ?, location = ?, age = ? WHERE id = ?"
+            con.query(sql, [name, email, hashToStoreInDb, location, age, request.session.user_id], 
+                function(insertError, insertResults) {
+                if (insertError) {
+                    throw insertError;
+                }
+                
+                user_id = request.session.user_id
+                con.query("DELETE FROM user_topics WHERE user_id = ?", [user_id], function(delerr, delres) {
+                    if (delerr) throw delerr
+
+                    topicsQuery = "INSERT INTO user_topics (user_id, topic) VALUES (?, ?)"
+                    for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
+                        con.query(topicsQuery, [user_id, topics[topicPtr]])
+                    }
+                    response.write(JSON.stringify(request.body))
+                    response.write("Profile Update Successful")
+                    response.end()
+                })
+            })
+        } else {
+            var unFilled = "";
+            if (!topicsJsonString) { unFilled = "topics"; }
+            if (!age) { unFilled = "age"; }
+            if (!location) { unFilled = "location"; }
+            if (!password) { unFilled = "password"; }
+            if (!email) { unFilled = "email"; }
+            if (!name) { unFilled = "name"; }
+            response.status(FORBIDDEN_STATUSCODE)
+            response.write("Please enter " + unFilled);
+            response.end();
+        }
+    } else {
+        response.status(FORBIDDEN_STATUSCODE)
+        response.write("Please signin")
+        response.end()
+    }
 });
 
 app.post('/signin', function(request, response) {
@@ -159,6 +217,7 @@ app.post('/delete-user', function(request, response) {
             response.end()
         })
     } else {
+        response.status(FORBIDDEN_STATUSCODE)
         response.write("Please signin")
         response.end()
     }
