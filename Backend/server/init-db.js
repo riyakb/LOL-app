@@ -114,3 +114,5 @@ sql = "SELECT top_memes_for_user.meme_id, top_memes_for_user.user_id, \
 sql = "ALTER TABLE user_meme_interaction \
     MODIFY COLUMN reaction INT NOT NULL DEFAULT '0';"
 
+//Update users
+sql = "UPDATE users SET name = ?, email = ?, password = ?, location = ?, age = ? WHERE id = ?"
