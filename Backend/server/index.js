@@ -148,6 +148,22 @@ app.post('/signin', function(request, response) {
 	}
 });
 
+
+app.post('/delete-user', function(request, response) {
+    if (request.session.loggedin) {
+        request.session.loggedin = false
+        sql = "DELETE FROM users WHERE id = ?"
+        con.query(sql, [request.session.user_id], function(err, res) {
+            if (err) throw err
+            response.write("You are removed from LOL")
+            response.end()
+        })
+    } else {
+        response.write("Please signin")
+        response.end()
+    }
+})
+
 app.post('/signout', function(request, response) {
     if (request.session.loggedin) {
         request.session.loggedin = false;
