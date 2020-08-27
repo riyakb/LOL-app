@@ -119,14 +119,27 @@ app.post('/signin', function(request, response) {
 				request.session.loggedin = true;
                 request.session.email = email;
                 request.session.user_id = results[0].id;
+                
+                topicsQuery = "SELECT topic FROM user_topics WHERE user_id = ?"
+                con.query(topicsQuery, [results[0].id], function(topicErr, topicResults) {
+                    if (topicErr) throw topicErr
 
-                response.write(JSON.stringify(results[0]))
-                response.write("Signin Successful!")
+                    topicsToSend = []
+                    for (sendTopicPtr = 0; sendTopicPtr < topicResults.length; sendTopicPtr++) {
+                        topicsToSend.push(topicResults[sendTopicPtr].topic)
+                    }
+                    results[0].topics = topicsToSend
+                    response.write(JSON.stringify(results[0]))
+                    response.write("Signin Successful!")  
+                    response.end();
+                })
+                
 			} else {
                 response.status(FORBIDDEN_STATUSCODE)
-				response.write('Incorrect Email and/or Password!');
+                response.write('Incorrect Email and/or Password!');
+                response.end();
 			}			
-			response.end();
+			
 		});
 	} else {
         response.status(FORBIDDEN_STATUSCODE)
