@@ -198,6 +198,7 @@ class MyMemesListState extends State<MyMemesList> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                
                 _buildItemsForListView(context, index),
                 SizedBox(height: 10.0),
                 Material(

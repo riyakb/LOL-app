@@ -51,6 +51,7 @@ class Info {
         this.location,
         this.age,
         this.signupTime,
+        this.topics,
     });
 
     int id;
@@ -60,6 +61,7 @@ class Info {
     String location;
     int age;
     DateTime signupTime;
+    String topics;
 
     factory Info.fromJson(Map<String, dynamic> json) => Info(
         id: json["id"],
@@ -69,6 +71,7 @@ class Info {
         location: json["location"],
         age: json["age"],
         signupTime: DateTime.parse(json["signup_time"]),
+        topics: json["topics"].toString(),
     );
 
     Map<String, dynamic> toJson() => {
@@ -79,6 +82,7 @@ class Info {
         "location": location,
         "age": age,
         "signup_time": signupTime.toIso8601String(),
+        "topics": topics,
     };
 }
 
@@ -111,6 +115,7 @@ class _MyLoginPageState extends State<MyLoginPage> {
       String fresp = resp[0]+'}';
       print(fresp);
       Info ret = infoFromJson(fresp);
+      ret.password = passwordController.text;
       showToast(resp[1]);
       Navigator.push(
         context,

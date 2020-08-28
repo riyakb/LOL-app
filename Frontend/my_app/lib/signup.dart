@@ -27,6 +27,16 @@ List<String> decode(String topics_string){
           ret.add(temp[i]);
         }
         return ret;
+}
+
+String encode(List<String> topics){
+        String topics_string = "[";
+        for(int i=0; i < topics.length; i++){
+          if(i>0) topics_string += ','; 
+          topics_string += '\"' + topics[i].toString() + '\"';
+        }
+        topics_string += "]";
+        return topics_string;
     }
 
 class Signup {
@@ -44,17 +54,7 @@ class Signup {
     String password;
     String location;
     String age;
-    List<String> topics;
-
-    String encode(List<String> topics){
-        String topics_string = "[";
-        for(int i=0; i < topics.length; i++){
-          if(i>0) topics_string += ','; 
-          topics_string += '\"' + topics[i].toString() + '\"';
-        }
-        topics_string += "]";
-        return topics_string;
-    }
+    String topics;
 
     factory Signup.fromJson(Map<String, dynamic> json) => Signup(
         name: json["name"],
@@ -62,7 +62,7 @@ class Signup {
         password: json["password"],
         location: json["location"],
         age: json["age"],
-        topics: decode(json["topics"]),
+        topics: json["topics"],
     );
 
     Map<String, dynamic> toJson() => {
@@ -71,7 +71,7 @@ class Signup {
         "password": password,
         "location": location,
         "age": age,
-        "topics": this.encode(topics),
+        "topics": topics,
     };
 }
 
@@ -89,7 +89,7 @@ class _MySignupPageState extends State<MySignupPage> {
 
   Future<void> _signup() async {
     final url = "https://summer20-sps-85.el.r.appspot.com/signup";
-    Signup signup = Signup(name: nameController.text, email: emailController.text, password: passwordController.text, location: locationController.text, age: ageController.text, topics: topics);
+    Signup signup = Signup(name: nameController.text, email: emailController.text, password: passwordController.text, location: locationController.text, age: ageController.text, topics: encode(topics));
     final response = await http.post('$url',
       headers: {
         HttpHeaders.contentTypeHeader: 'application/json'
