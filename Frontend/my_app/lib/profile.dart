@@ -257,8 +257,6 @@ class ProfileState extends State<Profile> {
     locationController = new TextEditingController(text: info.location);
     ageController = new TextEditingController(text: info.age.toString());
     super.initState();
-    int v = 0;
-    while(v<10) v++;
     setState(() {});
   }
   
@@ -289,8 +287,6 @@ class ProfileState extends State<Profile> {
       print(response.body);
       showToast(response.body);
       if(response.statusCode == 200){
-        // var resp = response.body.split('}');
-        // showToast(resp[1]);
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => MyLoginPage(title: 'Login')),
