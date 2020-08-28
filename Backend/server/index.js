@@ -12,6 +12,7 @@ const { timingSafeEqual } = require('crypto');
 const { userInfo } = require('os');
 const { SSL_OP_TLS_BLOCK_PADDING_BUG } = require('constants');
 const { json } = require('body-parser');
+const { response } = require('express');
 
 const saltRounds = 10;
 const maxDownloadCount = 5;
@@ -79,11 +80,11 @@ app.post('/signup', function(request, response) {
                     });
                     
                     topicsQuery = "INSERT INTO user_topics (user_id, topic) VALUES (?, ?)"
-                    con.query(topicsQuery, function(error, results) {
-                        for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
-                            con.query(topicsQuery, [user_id, topics[topicPtr]])
-                        }
-                    })
+                    
+                    for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
+                        con.query(topicsQuery, [user_id, topics[topicPtr]])
+                    }
+                    
                     response.write(JSON.stringify(request.body))
                     response.write("Registration Successful");
                     response.end();
@@ -92,16 +93,73 @@ app.post('/signup', function(request, response) {
 		});
 	} else {
         var unFilled = "";
+        if (!topicsJsonString) { unFilled = "topics"; }
         if (!age) { unFilled = "age"; }
         if (!location) { unFilled = "location"; }
         if (!password) { unFilled = "password"; }
         if (!email) { unFilled = "email"; }
         if (!name) { unFilled = "name"; }
-        if (!topicsJsonString) { unFilled = "topics"; }
         response.status(FORBIDDEN_STATUSCODE)
         response.write("Please enter " + unFilled);
 		response.end();
 	}
+});
+
+app.post('/update-profile', function(request, response) {
+    if (request.session.loggedin) {
+        var name = request.body.name;
+        var email = request.body.email;
+        var password = request.body.password;
+        var location = request.body.location;
+        var age = request.body.age;
+        var topicsJsonString = request.body.topics;
+
+        if (name && email && password && location && age && topicsJsonString) {
+            topics = JSON.parse(topicsJsonString)
+            if (topics.length == 0) {
+                response.status(FORBIDDEN_STATUSCODE)
+                response.write("At least one topic should be choosen")
+                response.end()
+                return
+            }
+            var hashToStoreInDb = getHashFromUserPassword(password);
+            sql = "UPDATE users SET name = ?, email = ?, password = ?, location = ?, age = ? WHERE id = ?"
+            con.query(sql, [name, email, hashToStoreInDb, location, age, request.session.user_id], 
+                function(insertError, insertResults) {
+                if (insertError) {
+                    throw insertError;
+                }
+                
+                user_id = request.session.user_id
+                con.query("DELETE FROM user_topics WHERE user_id = ?", [user_id], function(delerr, delres) {
+                    if (delerr) throw delerr
+
+                    topicsQuery = "INSERT INTO user_topics (user_id, topic) VALUES (?, ?)"
+                    for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
+                        con.query(topicsQuery, [user_id, topics[topicPtr]])
+                    }
+                    response.write(JSON.stringify(request.body))
+                    response.write("Profile Update Successful")
+                    response.end()
+                })
+            })
+        } else {
+            var unFilled = "";
+            if (!topicsJsonString) { unFilled = "topics"; }
+            if (!age) { unFilled = "age"; }
+            if (!location) { unFilled = "location"; }
+            if (!password) { unFilled = "password"; }
+            if (!email) { unFilled = "email"; }
+            if (!name) { unFilled = "name"; }
+            response.status(FORBIDDEN_STATUSCODE)
+            response.write("Please enter " + unFilled);
+            response.end();
+        }
+    } else {
+        response.status(FORBIDDEN_STATUSCODE)
+        response.write("Please signin")
+        response.end()
+    }
 });
 
 app.post('/signin', function(request, response) {
@@ -119,14 +177,27 @@ app.post('/signin', function(request, response) {
 				request.session.loggedin = true;
                 request.session.email = email;
                 request.session.user_id = results[0].id;
+                
+                topicsQuery = "SELECT topic FROM user_topics WHERE user_id = ?"
+                con.query(topicsQuery, [results[0].id], function(topicErr, topicResults) {
+                    if (topicErr) throw topicErr
 
-                response.write(JSON.stringify(results[0]))
-                response.write("Signin Successful!")
+                    topicsToSend = []
+                    for (sendTopicPtr = 0; sendTopicPtr < topicResults.length; sendTopicPtr++) {
+                        topicsToSend.push(topicResults[sendTopicPtr].topic)
+                    }
+                    results[0].topics = topicsToSend
+                    response.write(JSON.stringify(results[0]))
+                    response.write("Signin Successful!")  
+                    response.end();
+                })
+                
 			} else {
                 response.status(FORBIDDEN_STATUSCODE)
-				response.write('Incorrect Email and/or Password!');
+                response.write('Incorrect Email and/or Password!');
+                response.end();
 			}			
-			response.end();
+			
 		});
 	} else {
         response.status(FORBIDDEN_STATUSCODE)
@@ -134,6 +205,23 @@ app.post('/signin', function(request, response) {
 		response.end();
 	}
 });
+
+
+app.post('/delete-user', function(request, response) {
+    if (request.session.loggedin) {
+        request.session.loggedin = false
+        sql = "DELETE FROM users WHERE id = ?"
+        con.query(sql, [request.session.user_id], function(err, res) {
+            if (err) throw err
+            response.write("You are removed from LOL")
+            response.end()
+        })
+    } else {
+        response.status(FORBIDDEN_STATUSCODE)
+        response.write("Please signin")
+        response.end()
+    }
+})
 
 app.post('/signout', function(request, response) {
     if (request.session.loggedin) {
@@ -145,7 +233,16 @@ app.post('/signout', function(request, response) {
 
 app.post('/upload-meme', function(request, response) {
     if (request.session.loggedin) {
-        if (request.body.data) {
+        var topicsJsonString = request.body.topics;
+        if (request.body.data && topicsJsonString) {
+            topics = JSON.parse(topicsJsonString)
+            if (topics.length == 0) {
+                response.status(FORBIDDEN_STATUSCODE)
+                response.write("At least one topic should be choosen")
+                response.end()
+                return
+            }
+
             sql = "INSERT INTO memes (data, upload_user_id, upload_time) VALUES (?, ?, ?)";
             con.query(sql, [request.body.data, request.session.user_id, new Date()], function(error, results) {
                 if (error) {
@@ -162,13 +259,19 @@ app.post('/upload-meme', function(request, response) {
                             con.query(sql, [results[i].id, meme_id]);
                         }
                     });
+
+                    topicsQuery = "INSERT INTO meme_topics (meme_id, topic) VALUES (?, ?)"
+                    for (topicPtr = 0; topicPtr < topics.length; topicPtr++) {
+                        con.query(topicsQuery, [meme_id, topics[topicPtr]])
+                    }
+
                     response.write("Meme-upload successful");
                     response.end();
                 }
             });
         } else {
             response.status(FORBIDDEN_STATUSCODE)
-            response.write("Please enter data");
+            response.write("Please enter data and topics");
             response.end();
         }
     } else {
