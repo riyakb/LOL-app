@@ -1,0 +1,1 @@
+drivername=mysql+pymysql,username=root,password=lolrootlol,database=lol_app,unix_socket=/cloudsql/summer20-sps-85:asia-south1:lol,host=34.93.125.171
